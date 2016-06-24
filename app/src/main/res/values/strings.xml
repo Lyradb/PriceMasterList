@@ -1,0 +1,54 @@
+<resources>
+    <string name="app_name">Price Master</string>
+    <string name="icon_title">PMaster</string>
+    <string name="action_settings">Update DATA</string>
+    <string name="title_activity_search_product">Price List</string>
+    <string name="title_activity_login">Login</string>
+    <string name="action_host">Set Host IP</string>
+    <string name="action_import_product">Import from CSV</string>
+    <string name="action_import_users">Import USERS from CSV</string>
+    <string name="title_activity_create_login">Create Sign-In</string>
+    <string name="banner_ad_unit_id">ca-app-pub-3940256099942544/6300978111</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email (encase you forgot your credentials)</string>
+    <string name="prompt_userid">User ID</string>
+    <string name="prompt_password">Password</string>
+    <string name="confirm_prompt_password">Confirm Password</string>
+    <string name="action_sign_in">Register</string>
+    <string name="action_sign_in_short">Register</string>
+    <string name="error_invalid_email">This email address is invalid</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_watch_ad">Watch ADS Now!</string>
+    <string name="action_save">Save</string>
+    <string name="access_level">Access Level</string>action_admin_acees
+    <string name="credit_rule">Credit Rule</string>
+    <string-array name="access_level_items">
+        <item>Admin</item>
+        <item>User</item>
+    </string-array>
+    <string name="error_matching_password">Password Did not Match, Please try again.</string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing email
+        completions."
+    </string>
+    <string name="credit_info">
+        \n\nWatching Advertisement will replenish your credit.
+        \n\nCredit Rules:
+        \n1 Successful Watching of Advertisement = 5 Credits.
+        \n25 Records (Added/Edited/Deleted) = 1 Credit deduction.
+    </string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="action_change_pwd">Change Password</string>
+    <string name="prompt_current_password">Current Password</string>
+    <string name="prompt_new_password">New Password</string>
+    <string name="prompt_confirm_new_password">Confirm New Password</string>
+    <string name="prompt_admin_access">Admin Access</string>
+    <string name="prompt_products">Product Entry</string>
+    <string name="prompt_users">Users Entry</string>
+    <string name="action_confirm">CONFIRM</string>
+    <string name="title_activity_user_access">User Access</string>
+</resources>

@@ -1,0 +1,71 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.gowheyoke.pricemasterlist.MainActivity">
+
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="100"
+        android:title="@string/action_settings"
+        android:visible="false"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_host"
+        android:orderInCategory="200"
+        android:title="@string/action_host"
+        android:visible="false"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_logout"
+        android:icon="@android:drawable/ic_lock_lock"
+        android:orderInCategory="300"
+        android:title="Logout"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_change_pwd"
+        android:orderInCategory="400"
+        android:title="@string/action_change_pwd"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_import_product"
+        android:orderInCategory="500"
+        android:title="@string/action_import_product"
+        android:visible="false"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_credit_rule"
+        android:orderInCategory="600"
+        android:title="@string/credit_rule"
+        android:visible="true"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_admin_access"
+        android:orderInCategory="500"
+        android:title="@string/prompt_admin_access"
+        android:visible="false"
+        app:showAsAction="never">
+
+        <menu>
+            <group android:id="@+id/group2">
+                <item
+                    android:id="@+id/action_product"
+                    android:title="@string/prompt_products" />
+
+                <item
+                    android:id="@+id/action_users"
+                    android:title="@string/prompt_users" />
+
+                <item
+                    android:id="@+id/action_import_productx"
+                    android:title="@string/action_import_product" />
+            </group>
+        </menu>
+
+    </item>
+</menu>

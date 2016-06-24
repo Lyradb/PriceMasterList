@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "600412909922",
+    "firebase_url": "https://price-master.firebaseio.com",
+    "project_id": "price-master",
+    "storage_bucket": "price-master.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:600412909922:android:67a1cd0a5e9d6cc0",
+        "android_client_info": {
+          "package_name": "com.gowheyoke.pricemasterlist"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "600412909922-ajnv6vr6htesa3o6iurg2gskdgpjrtqq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOL_KzDs-TR1XXXpiZJ03UA6_T8gw_bEA"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

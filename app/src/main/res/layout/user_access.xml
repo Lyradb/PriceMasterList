@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:alignmentMode="alignBounds"
+    android:background="#ffffffff"
+    android:columnCount="5"
+    android:columnOrderPreserved="false"
+    android:orientation="horizontal"
+    android:padding="5dp">
+
+    <TextView
+        android:id="@+id/user_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_column="0"
+        android:layout_row="0"
+        android:text="user_id"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/rec_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_column="4"
+        android:layout_gravity="clip_horizontal|right"
+        android:layout_row="0"
+        android:text="ID" />
+
+    <TextView
+        android:id="@+id/email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_column="0"
+        android:layout_columnSpan="5"
+        android:layout_row="1"
+        android:text="email"
+        android:textStyle="italic" />
+
+    <TextView
+        android:id="@+id/accesslevel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_column="0"
+        android:layout_row="2"
+        android:text="accesslevel"
+        android:textStyle="italic" />
+
+    <!--
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="99,999.99"
+        android:id="@+id/wsp"
+        android:layout_row="2"
+        android:layout_column="2"
+        android:textStyle="italic"
+        android:visibility="gone"/>
+
+    <Space
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:layout_row="2"
+        android:layout_column="3" />
+    -->
+
+    <TextView
+        android:id="@+id/active"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_column="4"
+        android:layout_row="2"
+        android:text="Active"
+        android:textStyle="bold" />
+
+</GridLayout>

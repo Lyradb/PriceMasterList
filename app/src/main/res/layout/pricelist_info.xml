@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:padding="6dip"
+    android:background="#ffffffff">
+    -->
+<com.daimajia.swipe.SwipeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:swipe="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/swipe"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    swipe:leftEdgeSwipeOffset="0dp"
+    swipe:rightEdgeSwipeOffset="0dp">
+    <!-- Bottom View Start-->
+
+    <LinearLayout
+        android:id="@+id/bottom_wrapper"
+        android:layout_width="160dp"
+        android:layout_height="match_parent"
+        android:background="#66ddff00"
+        android:weightSum="1">
+
+        <TextView
+            android:id="@+id/wsp2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".5"
+            android:background="#faf865"
+            android:gravity="center"
+            android:text="wsp"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="#f23e22"
+            android:textStyle="italic" />
+
+        <ImageButton
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".25"
+            android:background="#20d005"
+            android:src="@android:drawable/ic_menu_edit"
+            android:textColor="#ffffff" />
+
+        <ImageButton
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".25"
+            android:background="#e91304"
+            android:src="@android:drawable/ic_menu_delete"
+            android:textColor="#ffffff" />
+    </LinearLayout>
+    <!-- Bottom View End-->
+
+    <!-- Surface View Start -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#ffffff"
+        android:padding="10dp">
+        <!--What you want to show in SurfaceView-->
+    </LinearLayout>
+
+    <GridLayout
+        android:id="@+id/grd"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:alignmentMode="alignBounds"
+        android:background="#ffffffff"
+        android:columnCount="5"
+        android:columnOrderPreserved="false"
+        android:orientation="horizontal"
+        android:padding="5dp">
+
+        <TextView
+            android:id="@+id/barcode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_column="0"
+            android:layout_row="0"
+            android:text="55555"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/qty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_column="2"
+            android:layout_gravity="clip_horizontal|right"
+            android:layout_row="0"
+            android:singleLine="false"
+            android:text="9999" />
+
+        <Space
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_column="3"
+            android:layout_row="0" />
+
+        <TextView
+            android:id="@+id/unit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_column="4"
+            android:layout_gravity="clip_horizontal|right"
+            android:layout_row="0"
+            android:text="KILO" />
+
+        <TextView
+            android:id="@+id/itemdesc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_column="0"
+            android:layout_columnSpan="5"
+            android:layout_row="1"
+            android:text="item description"
+            android:textStyle="italic" />
+
+        <TextView
+            android:id="@+id/make"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_column="0"
+            android:layout_row="2"
+            android:text="KAWASAKI"
+            android:textStyle="italic" />
+
+        <TextView
+            android:id="@+id/wsp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_column="2"
+            android:layout_row="2"
+            android:text="99,999.99"
+            android:textStyle="italic"
+            android:visibility="gone" />
+
+        <Space
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_column="3"
+            android:layout_row="2" />
+
+        <TextView
+            android:id="@+id/rsp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_column="4"
+            android:layout_row="2"
+            android:text="99,999.99"
+            android:textStyle="bold" />
+
+    </GridLayout>
+    <!-- Surface View End -->
+</com.daimajia.swipe.SwipeLayout><!--
+</RelativeLayout>
+-->
