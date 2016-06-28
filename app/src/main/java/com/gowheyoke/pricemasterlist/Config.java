@@ -2,7 +2,7 @@ package com.gowheyoke.pricemasterlist;
 
 public class Config {
 
-    public static final String FIREBASE_URL = "https://price-master.firebaseio.com";
+    public static final String FIREBASE_URL = "https://price-master.firebaseio.com/";
     public static final String URL_GET_PRODUCT_LIST = "/pricelist/getpricelist.php";
     public static final String URL_GET_USERS = "/pricelist/getusers.php";
 

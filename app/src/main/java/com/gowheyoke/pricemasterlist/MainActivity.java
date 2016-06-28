@@ -2,12 +2,14 @@ package com.gowheyoke.pricemasterlist;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -37,6 +39,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.firebase.client.DataSnapshot;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
@@ -82,6 +88,8 @@ public class MainActivity extends AppCompatActivity {
     private Runnable adRun;
     private Handler adTHandle;
     private Runnable adTRun;
+    private ProgressDialog progress;
+    private Firebase ref;
     //private Menu mnuTopMenuActionBar_;
 
     //getting unique id for device
@@ -93,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Firebase.setAndroidContext(this);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -372,27 +381,50 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            try {
-                if (host_uri != null && host_uri.length() > 0) {
-                    if (isInternetAvailable(host_uri)) {
-                        getData();
+//            progress = ProgressDialog.show(file_import.this,
+//                "Checking/Caching File", s.toString() + " file...Please wait, it may take long.", true);
+//            progress.setCancelable(true);
+//            progress.show();
+            progress = new ProgressDialog(MainActivity.this);
+            progress.setCancelable(true);
+            progress.setMessage("Ready to Sync ...");
+            progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            progress.setButton(DialogInterface.BUTTON_POSITIVE, "Sync NOW", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (isInternetAvailable(Config.FIREBASE_URL)) {
+                        syncOnClickListner();
                     } else {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                        builder.setMessage("Sorry,\nYou are disconnected.\nPlease Retry again later.")
-                                .setCancelable(false)
-                                .setPositiveButton("OK",
-                                        new DialogInterface.OnClickListener() {
-                                            public void onClick(DialogInterface dialog, int id) {
-                                                //do things
-                                            }
-                                        });
-                        AlertDialog alert = builder.create();
-                        alert.show();
+                        Toast.makeText(MainActivity.this, "No Internet Connection!", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
                     }
                 }
-            } catch (Exception e) {
-                Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show();
-            }
+            });
+            progress.setProgress(0);
+            progress.setMax(dbHelper.PriceListCount());
+            progress.show();
+//            progress.getButton(ProgressDialog.BUTTON_POSITIVE).setEnabled(false);
+//            try {
+//                if (host_uri != null && host_uri.length() > 0) {
+//                    if (isInternetAvailable(host_uri)) {
+//                        getData();
+//                    } else {
+//                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+//                        builder.setMessage("Sorry,\nYou are disconnected.\nPlease Retry again later.")
+//                                .setCancelable(false)
+//                                .setPositiveButton("OK",
+//                                        new DialogInterface.OnClickListener() {
+//                                            public void onClick(DialogInterface dialog, int id) {
+//                                                //do things
+//                                            }
+//                                        });
+//                        AlertDialog alert = builder.create();
+//                        alert.show();
+//                    }
+//                }
+//            } catch (Exception e) {
+//                Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show();
+//            }
         }
 
         if (id == R.id.action_host) {
@@ -732,6 +764,62 @@ public class MainActivity extends AppCompatActivity {
                 .setActionTextColor(Color.RED)
                 .show();
         */
+    }
+
+    public void syncOnClickListner() {
+        //Creating firebase object
+        ref = new Firebase(Config.FIREBASE_URL + "product");
+        new Thread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Cursor cursor = dbHelper.fetchAllPriceList();
+                            cursor.moveToFirst();
+                            int i = 0;
+                            while (cursor.moveToNext()) {
+                                i++;
+                                Product product = new Product();
+                                //Adding values
+                                Log.d("_xxxbarcode_", "onOptionsItemSelected: " + cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_BARCODE)));
+                                Log.d("_xxxmake_", "onOptionsItemSelected: " + cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_MAKE)));
+                                product.setBarcode(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_BARCODE)).toString().trim());
+                                product.setMake(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_MAKE)).toString().trim());
+                                product.setItemDesc(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_ITEMDESC)).toString().trim());
+                                product.setUnit(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_UNIT)).toString().trim());
+                                product.setQty(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_QTY)).toString().trim());
+                                product.setWsp(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_WSP)).toString().trim());
+                                product.setRsp(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_RSP)).toString().trim());
+
+                                //Storing values to firebase
+                                ref.child("product").setValue(product);
+                                progress.setProgress(i + 1);
+
+                            }
+                            progress.dismiss();
+                        } catch (Exception e) {
+                            Toast.makeText(getApplicationContext(), e.toString().trim(), Toast.LENGTH_LONG).show();
+                        }
+                    }
+                }
+        );
+
+        //Value event listener for realtime data update
+        ref.addValueEventListener(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+                    //Getting the data from snapshot
+                    Product product = postSnapshot.getValue(Product.class);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+                System.out.println("The read failed: " + firebaseError.getMessage());
+            }
+        });
     }
 
     public void logout(View view) {
