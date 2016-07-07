@@ -26,6 +26,8 @@ public class PriceListDBAdapter {
     public static final String KEY_CONFIG_NAME = "name";
     public static final String KEY_CONFIG_VAL = "value";
     public static final String KEY_ACTIVE = "active";
+    public static final String KEY_DEVICE_ID = "device_id";
+    public static final String KEY_BALANCE = "BALANCE";
 
     private static final String TAG = "PriceListDbAdapter";
     private static final String DATABASE_NAME = "Product";
@@ -101,6 +103,23 @@ public class PriceListDBAdapter {
         initialValues.put(KEY_RSP, rsp);
 
         return mDb.insert(SQLITE_PRODUCT, null, initialValues);
+    }
+
+    public long updateProduct(String barcode, String make, String itemdesc,
+                              String unit, String qty, String wsp, String rsp) {
+
+        ContentValues values = new ContentValues();
+        values.put(KEY_BARCODE, barcode);
+        values.put(KEY_MAKE, make);
+        values.put(KEY_ITEMDESC, itemdesc);
+        values.put(KEY_UNIT, unit);
+        values.put(KEY_QTY, qty);
+        values.put(KEY_WSP, wsp);
+        values.put(KEY_RSP, rsp);
+
+        // updating row
+        return mDb.update(SQLITE_PRODUCT, values, KEY_BARCODE + " like ?",
+                new String[]{barcode.trim()});
     }
 
     public int updateUser(String userid, String pwd) {
@@ -440,6 +459,8 @@ public class PriceListDBAdapter {
 
     public void initConfig() {
 
+//        Firebase ref = new Firebase(Config.FIREBASE_URL + "web/data/DeviceInfo");
+
         Cursor mCursor = mDb.query(SQLITE_CONFIG, new String[]{KEY_ROWID,
                         KEY_CONFIG_NAME, KEY_CONFIG_VAL},
                 null, null, null, null, null);
@@ -450,9 +471,81 @@ public class PriceListDBAdapter {
 
         if (mCursor.getCount() <= 0 || mCursor == null) {
             //initialize
+//            ref.child("devices");
+//            ref.addListenerForSingleValueEvent(new ValueEventListener() {
+//                @Override
+//                public void onDataChange(DataSnapshot snapshot) {
+//                    Boolean found = false;
+//                    for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+//                        Log.d("_snapshot_", "onDataChange: "+postSnapshot.getValue());
+//                        if (postSnapshot.getValue() == MainActivity.deviceId) {
+//                            String creditCount = (String) postSnapshot.child("Credit Count").getValue();
+//                            String transCounter = (String) postSnapshot.child("TransCounter").getValue();
+//                            createConfig("Credit Count", creditCount);
+//                            createConfig("TransCounter", transCounter);
+//                            found = true;
+//                        }
+//                    }
+//
+//                    if (!found){
+//                        Firebase fb = new Firebase(Config.FIREBASE_URL + "web/data/DeviceInfo");
+//                        DateFormat dateFormatter = new SimpleDateFormat("yyyyMMdd hhmmss");
+//                        dateFormatter.setLenient(false);
+//                        Date today = new Date();
+//                        String s = dateFormatter.format(today);
+//                        Map<String, String> deviceInfo = new HashMap<String, String>();
+//                        deviceInfo.put("Email", MainActivity.deviceId);
+//                        deviceInfo.put("TransDate", s);
             createConfig("Credit Count", "5000");
             createConfig("TransCounter", "0");
-            Log.i("xDBx", "DB initial value is created");
+//                        deviceInfo.put("Credit Count", "500");
+//                        deviceInfo.put("TransCounter", "0");
+//                        fb.child("devices").child(MainActivity.deviceId).setValue(deviceInfo);
+//                    }
+//                }
+//
+//                @Override
+//                public void onCancelled(FirebaseError firebaseError) {
+//                }
+//            });
+
+//            Query queryRef = ref.orderByChild("devices").equalTo(MainActivity.deviceId);
+//            Log.d("_xxQueryRef_", "initConfig: "+queryRef.toString());
+//            if (queryRef.addListenerForSingleValueEvent().equals(null)) {
+//            createConfig("Credit Count", "5000");
+//            createConfig("TransCounter", "0");
+//            deviceInfo.put("Credit Count", "500");
+//            deviceInfo.put("TransCounter", "0");
+//            ref.child("devices").child(MainActivity.deviceId).setValue(deviceInfo);
+//            } else {
+//                queryRef.addChildEventListener(new ChildEventListener() {
+//                    @Override
+//                    public void onChildAdded(DataSnapshot snapshot, String previousChild) {
+//                        String creditCount = (String) snapshot.child("Credit Count").getValue();
+//                        String transCounter = (String) snapshot.child("TransCounter").getValue();
+//                        createConfig("Credit Count", creditCount);
+//                        createConfig("TransCounter", transCounter);
+//                    }
+//
+//                    @Override
+//                    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onChildRemoved(DataSnapshot dataSnapshot) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+//                    }
+//
+//                    @Override
+//                    public void onCancelled(FirebaseError firebaseError) {
+//                    }
+//                });
+//            }
         }
     }
 
@@ -481,6 +574,7 @@ public class PriceListDBAdapter {
             onCreate(db);
         }
     }
+
 
     /*
     public void insertAdminUser(){

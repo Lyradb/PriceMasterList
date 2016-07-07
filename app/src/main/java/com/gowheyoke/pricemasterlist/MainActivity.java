@@ -15,6 +15,7 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -42,6 +43,7 @@ import com.android.volley.toolbox.Volley;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
@@ -52,7 +54,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Method;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     public static final String PREF_LOG = "loginses";
@@ -68,10 +75,12 @@ public class MainActivity extends AppCompatActivity {
     public static final String INTERSTITIALAD_ID = "ca-app-pub-3940256099942544/1033173712";
     public static final Integer CREDIT_EXCHANGE = 10;
     public static final Integer CREDIT_POINTS = 5;
+    public static String deviceId;
     public String host_uri;
     SharedPreferences sharedpreferences;
     View.OnClickListener attemptLogin;
     View.OnClickListener fabOnClickListner;
+    DialogInterface.OnClickListener syncOnClickListner;
     private FirstReceiver firstReceiver;
     private PriceListDBAdapter dbHelper;
     private Runnable r;
@@ -93,14 +102,16 @@ public class MainActivity extends AppCompatActivity {
     //private Menu mnuTopMenuActionBar_;
 
     //getting unique id for device
-    //String id = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+    //String device_id = Settings.Secure.getString(this.getContentResolver(), Settings.Secure.ANDROID_ID);
     private Boolean doneTimer = false;
     private Integer credit_earned = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        deviceId = Settings.Secure.getString(this.getContentResolver(), Settings.Secure.ANDROID_ID);
         Firebase.setAndroidContext(this);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -241,6 +252,48 @@ public class MainActivity extends AppCompatActivity {
                 confirm_logout(view);
             }
         });
+
+        syncOnClickListner = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int whichButt) {
+                //Creating firebase object
+                ref = new Firebase(Config.FIREBASE_URL + "data");
+                new Thread(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    Cursor cursor = dbHelper.fetchAllPriceList();
+                                    cursor.moveToFirst();
+                                    int i = 0;
+                                    while (cursor.moveToNext()) {
+                                        i++;
+                                        Product product = new Product();
+                                        //Adding values
+                                        Log.d("_xxxbarcode_", "onOptionsItemSelected: " + cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_BARCODE)));
+                                        Log.d("_xxxmake_", "onOptionsItemSelected: " + cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_MAKE)));
+//                                product.setBarcode(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_BARCODE)).toString().trim());
+                                        product.setMake(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_MAKE)).toString().trim());
+                                        product.setItemDesc(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_ITEMDESC)).toString().trim());
+                                        product.setUnit(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_UNIT)).toString().trim());
+                                        product.setQty(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_QTY)).toString().trim());
+                                        product.setWsp(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_WSP)).toString().trim());
+                                        product.setRsp(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_RSP)).toString().trim());
+
+                                        //Storing values to firebase
+                                        ref.child("products").child(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_BARCODE)).toString().trim()).setValue(product);
+                                        progress.setProgress(i + 1);
+
+                                    }
+                                    progress.dismiss();
+                                } catch (Exception e) {
+                                    Toast.makeText(getApplicationContext(), e.toString().trim(), Toast.LENGTH_LONG).show();
+                                }
+                            }
+                        }
+                );
+            }
+        };
 
         fabOnClickListner = new View.OnClickListener() {
             @Override
@@ -389,17 +442,7 @@ public class MainActivity extends AppCompatActivity {
             progress.setCancelable(true);
             progress.setMessage("Ready to Sync ...");
             progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            progress.setButton(DialogInterface.BUTTON_POSITIVE, "Sync NOW", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    if (isInternetAvailable(Config.FIREBASE_URL)) {
-                        syncOnClickListner();
-                    } else {
-                        Toast.makeText(MainActivity.this, "No Internet Connection!", Toast.LENGTH_SHORT).show();
-                        dialog.dismiss();
-                    }
-                }
-            });
+            progress.setButton(DialogInterface.BUTTON_POSITIVE, "Sync NOW", syncOnClickListner);
             progress.setProgress(0);
             progress.setMax(dbHelper.PriceListCount());
             progress.show();
@@ -631,6 +674,189 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(new Intent(getApplicationContext(), file_import.class), 5);
     }
 
+    public void clickCloudImport(View view) {
+        Log.d("_xxError_", "clickCloudImport: " + 1);
+        Log.d("_xxError_", "clickCloudImport: " + 4);
+        progress = new ProgressDialog(view.getContext());
+        progress.setCancelable(true);
+        progress.setTitle("Importing From Cloud");
+        progress.setMessage("Checking Data... Please wait.");
+        progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progress.setButton(DialogInterface.BUTTON_POSITIVE, "Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        progress.setProgress(0);
+        progress.setMax(100);
+        progress.show();
+        progress.getButton(ProgressDialog.BUTTON_POSITIVE).setEnabled(false);
+//
+//        Log.d("_xxError_", "clickCloudImport: "+2);
+//
+        new Thread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d("_xxError_", "clickCloudImport: " + 3);
+                        dbHelper = new PriceListDBAdapter(MainActivity.this);
+                        dbHelper.open();
+                        Cursor cursor = dbHelper.fetchUserAccessByID(1);
+                        String emailId = cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_EMAIL));
+                        Firebase ref = new Firebase(Config.FIREBASE_URL);
+                        Query queryRef = ref.child("web").child("data").child("email").child(emailId.replace(".", "")).orderByChild("product");
+                        queryRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot snapshot) {
+                                if (snapshot.getChildrenCount() > 0) {
+                                    progress.dismiss();
+                                    progress = new ProgressDialog(MainActivity.this);
+                                    progress.setCancelable(true);
+                                    progress.setTitle("Importing From Cloud");
+                                    progress.setMessage("Checking Data... Please wait.");
+                                    progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                                    progress.setButton(DialogInterface.BUTTON_POSITIVE, "Ok", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                        }
+                                    });
+                                    progress.setProgress(0);
+                                    progress.setMax(100);
+                                    progress.show();
+                                    progress.getButton(ProgressDialog.BUTTON_POSITIVE).setEnabled(false);
+                                    Boolean first = true;
+                                    for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+                                        Log.d("_xxSsnapshot_", "onDataChange: " + postSnapshot.getChildrenCount());
+                                        Log.d("_xxSnapshot_", "onDataChange: " + postSnapshot.getValue());
+                                        final DataSnapshot childSnapshot = postSnapshot;
+                                        if (first) {
+                                            progress.setMax((int) childSnapshot.getChildrenCount());
+                                            first = false;
+                                        }
+                                        new Thread(
+                                                new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        Integer x = 0;
+                                                        for (DataSnapshot data : childSnapshot.getChildren()) {
+                                                            Log.d("_xxsnapshot_", "onDataChange: " + data.getKey() + data.getValue());
+                                                            progress.setMessage("Importing..." + data.getKey());
+                                                            String barcode = data.child(PriceListDBAdapter.KEY_BARCODE).getValue().toString();
+                                                            String make = data.child(PriceListDBAdapter.KEY_MAKE).getValue().toString();
+                                                            String item_desc = data.child(PriceListDBAdapter.KEY_ITEMDESC).getValue().toString();
+                                                            String unit = data.child(PriceListDBAdapter.KEY_UNIT).getValue().toString();
+                                                            String qty = data.child(PriceListDBAdapter.KEY_QTY).getValue().toString();
+                                                            String wsp = data.child(PriceListDBAdapter.KEY_WSP).getValue().toString();
+                                                            String rsp = data.child(PriceListDBAdapter.KEY_RSP).getValue().toString();
+
+                                                            Cursor cursor = dbHelper.fetchPriceListByItemDesc(data.getKey());
+                                                            if (cursor.getCount() > 0) { //record exists
+                                                                dbHelper.updateProduct(barcode, make, item_desc, unit, qty, wsp, rsp);
+                                                            } else { //record not found
+                                                                dbHelper.createPriceList(barcode, make, item_desc, unit, qty, wsp, rsp);
+                                                            }
+                                                            progress.setProgress(++x);
+                                                        }
+                                                    }
+                                                }
+                                        ).start();
+                                    }
+                                    progress.setMessage("Completed.");
+                                } else {
+                                    progress.setMessage("No update available.");
+                                }
+                                Log.d("_xxError_", "clickCloudImport: " + 6);
+                                progress.getButton(ProgressDialog.BUTTON_POSITIVE).setEnabled(true);
+                            }
+
+                            @Override
+                            public void onCancelled(FirebaseError firebaseError) {
+                                Log.d("_xxError_", "clickCloudImport: " + firebaseError.toString());
+                            }
+                        });
+                    }
+                }
+        ).start();
+    }
+
+    public void clickCloudExport(View view) {
+        Log.d("_xxxx_", "clickCloudExport: " + 0);
+        if (isInternetAvailable(Config.FIREBASE_URL)) {
+            Log.d("_xxxx_", "clickCloudExport: " + 1);
+
+            progress = new ProgressDialog(view.getContext());
+            progress.setCancelable(true);
+            progress.setTitle("Exporting to Cloud");
+            Log.d("_xxxx_", "clickCloudExport: " + 3);
+            progress.setMessage("In Progress..");
+            progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            progress.setButton(DialogInterface.BUTTON_POSITIVE, "Ok", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            progress.setProgress(0);
+            dbHelper = new PriceListDBAdapter(this);
+            dbHelper.open();
+            progress.setMax(dbHelper.PriceListCount());
+            progress.show();
+            progress.getButton(ProgressDialog.BUTTON_POSITIVE).setEnabled(false);
+
+            new Thread(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.d("_xxxx_", "clickCloudExport: " + 4);
+                            Cursor cursor = dbHelper.fetchUserAccessByID(1);
+                            String emailId = cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_EMAIL));
+                            Firebase ref = new Firebase(Config.FIREBASE_URL);
+                            Log.d("_xxxx_", "clickCloudExport: " + cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_EMAIL)));
+
+                            try {
+                                cursor = dbHelper.fetchAllPriceList();
+                                Log.d("_xxxx_", "clickCloudExport: " + 5 + cursor.getCount());
+                                cursor.moveToFirst();
+                                int y = (cursor.getCount() / 1000) + ((cursor.getCount() % 1000) > 0 ? 1 : 0);
+                                int start = 0;
+                                for (int x = 1; x <= y; x++) {
+                                    int end = 1000 * x;
+                                    for (int i = start; i < end; i++) {
+//                                    for (int i = 0; i <= cursor.getCount(); i++) {
+                                        Log.d("_xxxx_", "clickCloudExport: " + 6 + i);
+                                        Map<String, String> product = new HashMap<String, String>();
+                                        product.put(PriceListDBAdapter.KEY_BARCODE, cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_BARCODE)));
+                                        product.put(PriceListDBAdapter.KEY_MAKE, cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_MAKE)));
+                                        product.put(PriceListDBAdapter.KEY_ITEMDESC, cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_ITEMDESC)));
+                                        product.put(PriceListDBAdapter.KEY_UNIT, cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_UNIT)));
+                                        product.put(PriceListDBAdapter.KEY_QTY, cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_QTY)));
+                                        product.put(PriceListDBAdapter.KEY_WSP, cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_WSP)));
+                                        product.put(PriceListDBAdapter.KEY_RSP, cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_RSP)));
+                                        ref.child("web").child("data").child("email").child(emailId.replace(".", "")).child("products").child(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_BARCODE))).setValue(product);
+                                        cursor.moveToNext();
+                                        if (i == (cursor.getCount() - 1)) {
+//                                                mBuilder.setSound(uri);
+                                            break;
+                                        }
+                                    }
+                                    progress.setProgress(end);
+                                    start = end;
+                                }
+                            } catch (Exception e) {
+                                Toast.makeText(MainActivity.this, "Error: " + e.toString(), Toast.LENGTH_LONG).show();
+                                e.printStackTrace();
+                            }
+                            Log.d("_xxxx_", "clickCloudExport: " + 7);
+                            progress.setMessage("Completed");
+                            progress.getButton(ProgressDialog.BUTTON_POSITIVE).setEnabled(true);
+                        }
+                    }
+            ).start();
+        }
+    }
+
     public void clickDelete(View view) {
         Toast.makeText(this, "You clicked DELETE.", Toast.LENGTH_LONG).show();
     }
@@ -649,7 +875,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void displayAdCredit() {
+        DateFormat dateFormatter = new SimpleDateFormat("yyyyMMdd hhmmss");
+        dateFormatter.setLenient(false);
+        Date today = new Date();
+        String s = dateFormatter.format(today);
+
+        String val1 = dbHelper.ConfigValue("TransCounter");
         String val = dbHelper.ConfigValue("Credit Count");
+
+        if (isInternetAvailable(Config.FIREBASE_URL)) {
+            Firebase ref = new Firebase(Config.FIREBASE_URL + "web/data/DeviceInfo");
+            Map<String, Object> deviceInfo = new HashMap<String, Object>();
+            deviceInfo.put("Email", MainActivity.deviceId);
+            deviceInfo.put("TransDate", s);
+            deviceInfo.put("TransCounter", val1);
+            deviceInfo.put("Credit Count", val);
+            ref.child("devices").child(MainActivity.deviceId).updateChildren(deviceInfo);
+        }
+
         TextView textViewRecordCount = (TextView) findViewById(R.id.availCredit);
         if (Integer.valueOf(val) > 0)
             textViewRecordCount.setText("Available Credit: " + val + "\nSee Credit Rule");
@@ -737,9 +980,11 @@ public class MainActivity extends AppCompatActivity {
                             TextView viewAdmin = (TextView) findViewById(R.id.textViewAdmin);
                             Button btnUserAccess = (Button) findViewById(R.id.btn_userAccess);
                             Button btnImportCSV = (Button) findViewById(R.id.btn_importCSV);
+                            Button btnCloudExport = (Button) findViewById(R.id.btnCloudExport);
                             viewAdmin.setVisibility(View.GONE);
                             btnUserAccess.setVisibility(View.GONE);
                             btnImportCSV.setVisibility(View.GONE);
+                            btnCloudExport.setVisibility(View.GONE);
                             IntentFilter filter = new IntentFilter(ACTION_CLOSE);
                             IntentFilter adminFilter = new IntentFilter(ACTION_ADMIN);
                             firstReceiver = new FirstReceiver();
@@ -765,62 +1010,62 @@ public class MainActivity extends AppCompatActivity {
                 .show();
         */
     }
-
-    public void syncOnClickListner() {
-        //Creating firebase object
-        ref = new Firebase(Config.FIREBASE_URL + "product");
-        new Thread(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Cursor cursor = dbHelper.fetchAllPriceList();
-                            cursor.moveToFirst();
-                            int i = 0;
-                            while (cursor.moveToNext()) {
-                                i++;
-                                Product product = new Product();
-                                //Adding values
-                                Log.d("_xxxbarcode_", "onOptionsItemSelected: " + cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_BARCODE)));
-                                Log.d("_xxxmake_", "onOptionsItemSelected: " + cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_MAKE)));
-                                product.setBarcode(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_BARCODE)).toString().trim());
-                                product.setMake(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_MAKE)).toString().trim());
-                                product.setItemDesc(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_ITEMDESC)).toString().trim());
-                                product.setUnit(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_UNIT)).toString().trim());
-                                product.setQty(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_QTY)).toString().trim());
-                                product.setWsp(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_WSP)).toString().trim());
-                                product.setRsp(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_RSP)).toString().trim());
-
-                                //Storing values to firebase
-                                ref.child("product").setValue(product);
-                                progress.setProgress(i + 1);
-
-                            }
-                            progress.dismiss();
-                        } catch (Exception e) {
-                            Toast.makeText(getApplicationContext(), e.toString().trim(), Toast.LENGTH_LONG).show();
-                        }
-                    }
-                }
-        );
-
-        //Value event listener for realtime data update
-        ref.addValueEventListener(new ValueEventListener() {
-
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
-                    //Getting the data from snapshot
-                    Product product = postSnapshot.getValue(Product.class);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-                System.out.println("The read failed: " + firebaseError.getMessage());
-            }
-        });
-    }
+//
+//    public void syncOnClickListner() {
+//        //Creating firebase object
+//        ref = new Firebase(Config.FIREBASE_URL + "data");
+//        new Thread(
+//                new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        try {
+//                            Cursor cursor = dbHelper.fetchAllPriceList();
+//                            cursor.moveToFirst();
+//                            int i = 0;
+//                            while (cursor.moveToNext()) {
+//                                i++;
+//                                Product product = new Product();
+//                                //Adding values
+//                                Log.d("_xxxbarcode_", "onOptionsItemSelected: " + cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_BARCODE)));
+//                                Log.d("_xxxmake_", "onOptionsItemSelected: " + cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_MAKE)));
+////                                product.setBarcode(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_BARCODE)).toString().trim());
+//                                product.setMake(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_MAKE)).toString().trim());
+//                                product.setItemDesc(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_ITEMDESC)).toString().trim());
+//                                product.setUnit(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_UNIT)).toString().trim());
+//                                product.setQty(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_QTY)).toString().trim());
+//                                product.setWsp(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_WSP)).toString().trim());
+//                                product.setRsp(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_RSP)).toString().trim());
+//
+//                                //Storing values to firebase
+//                                ref.child("products").child(cursor.getString(cursor.getColumnIndex(PriceListDBAdapter.KEY_BARCODE)).toString().trim()).setValue(product);
+//                                progress.setProgress(i + 1);
+//
+//                            }
+//                            progress.dismiss();
+//                        } catch (Exception e) {
+//                            Toast.makeText(getApplicationContext(), e.toString().trim(), Toast.LENGTH_LONG).show();
+//                        }
+//                    }
+//                }
+//        );
+//
+//        //Value event listener for realtime data update
+//        ref.addValueEventListener(new ValueEventListener() {
+//
+//            @Override
+//            public void onDataChange(DataSnapshot snapshot) {
+//                for (DataSnapshot postSnapshot : snapshot.getChildren()) {
+//                    //Getting the data from snapshot
+//                    Product product = postSnapshot.getValue(Product.class);
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(FirebaseError firebaseError) {
+//                System.out.println("The read failed: " + firebaseError.getMessage());
+//            }
+//        });
+//    }
 
     public void logout(View view) {
         SharedPreferences sharedpreferences = getSharedPreferences(PREF_LOG, Context.MODE_PRIVATE);
@@ -985,14 +1230,17 @@ public class MainActivity extends AppCompatActivity {
 
                     Button btnUserAccess = (Button) findViewById(R.id.btn_userAccess);
                     Button btnimportCSV = (Button) findViewById(R.id.btn_importCSV);
+                    Button btnCloudExport = (Button) findViewById(R.id.btnCloudExport);
                     TextView viewAdmin = (TextView) findViewById(R.id.textViewAdmin);
                     if (dbHelper.isAdmin(userId)) {
                         btnUserAccess.setVisibility(View.VISIBLE);
                         btnimportCSV.setVisibility(View.VISIBLE);
+                        btnCloudExport.setVisibility(View.VISIBLE);
                         viewAdmin.setVisibility(View.VISIBLE);
                     } else {
                         btnUserAccess.setVisibility(View.INVISIBLE);
                         btnimportCSV.setVisibility(View.INVISIBLE);
+                        btnCloudExport.setVisibility(View.INVISIBLE);
                         viewAdmin.setVisibility(View.INVISIBLE);
                     }
                 } catch (Exception e) {
@@ -1019,4 +1267,5 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 }
+
 
